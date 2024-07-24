@@ -1,21 +1,17 @@
 #!/bin/bash
 
-# Запуск MySQL в фоновом режиме
+# Запуск MySQL сервера
 service mysql start
 
-# Подождите, пока MySQL полностью не запустится
-until mysqladmin ping &>/dev/null; do
-    echo -n "."; sleep 1
-done
+# Ожидание завершения процесса запуска
+sleep 5
 
-# Проверка и создание базы данных WordPress, если она не существует
-if ! mysql -u root -prootpassword -e "USE wordpress"; then
-    echo "Creating WordPress database..."
-    mysql -u root -prootpassword -e "CREATE DATABASE wordpress;"
-    mysql -u root -prootpassword -e "CREATE USER 'wp_user'@'localhost' IDENTIFIED BY 'password';"
-    mysql -u root -prootpassword -e "GRANT ALL PRIVILEGES ON wordpress.* TO 'wp_user'@'localhost';"
-    mysql -u root -prootpassword -e "FLUSH PRIVILEGES;"
-fi
+# Создание пользователя и предоставление привилегий
+mysql -u root -prootpassword <<EOF
+CREATE USER 'wp_user'@'%' IDENTIFIED BY 'fara';
+GRANT ALL PRIVILEGES ON wordpress.* TO 'wp_user'@'%';
+FLUSH PRIVILEGES;
+EOF
 
-# Поддерживайте контейнер в активном состоянии
-tail -f /dev/null
+# Ожидание завершения процесса запуска
+tail -f /var/log/mysql/error.log
